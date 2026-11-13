@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brincando em Libras - Vocabulário Infantil</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>🤟 Brincando em Libras</h1>
+    <p>Aprenda palavras, imagens e sinais brincando!</p>
+  </header>
+
+  <main>
+    <!-- TELA 1: MENU INICIAL DE CATEGORIAS -->
+    <section id="tela-menu" class="tela ativa">
+      <h2>Escolha um tema para começar:</h2>
+      <div class="grade-categorias">
+        <button class="card-categoria cor-cores" onclick="abrirCategoria('cores')">
+          <img class="img-capa" src="midia/capas/cores.jpg" onerror="this.onerror=null; this.src='midia/capas/cores.png';" alt="Cores">
+          <span class="titulo-grupo">CORES</span>
+        </button>
+
+        <button class="card-categoria cor-animais" onclick="abrirCategoria('animais')">
+          <img class="img-capa" src="midia/capas/animais.jpg" onerror="this.onerror=null; this.src='midia/capas/animais.png';" alt="Animais">
+          <span class="titulo-grupo">ANIMAIS</span>
+        </button>
+
+        <button class="card-categoria cor-frutas" onclick="abrirCategoria('frutas')">
+          <img class="img-capa" src="midia/capas/frutas.jpg" onerror="this.onerror=null; this.src='midia/capas/frutas.png';" alt="Frutas">
+          <span class="titulo-grupo">FRUTAS</span>
+        </button>
+
+        <button class="card-categoria cor-familia" onclick="abrirCategoria('familia')">
+          <img class="img-capa" src="midia/capas/familia.jpg" onerror="this.onerror=null; this.src='midia/capas/familia.png';" alt="Família">
+          <span class="titulo-grupo">FAMÍLIA</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 2: MODO APRENDER (VOCABULÁRIO) -->
+    <section id="tela-aprender" class="tela">
+      <div class="barra-topo">
+        <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar aos Temas</button>
+        <h2 id="titulo-categoria-atual">CATEGORIA</h2>
+        <button class="btn-jogar" onclick="iniciarJogo()">🎮 Praticar Agora!</button>
+      </div>
+
+      <div id="lista-itens" class="grade-itens"></div>
+
+      <div id="cartao-destaque" class="cartao-destaque">
+        <div class="lado-conceito">
+          <div id="visual-conceito" class="visual-conceito"></div>
+          <div class="palavra-box">
+            <span id="palavra-texto">PALAVRA</span>
+            <button class="btn-audio" onclick="falarPalavraAtual()" title="Ouvir pronúncia">🔊</button>
+          </div>
+        </div>
+
+        <div class="lado-libras">
+          <span class="etiqueta-libras">Sinal em Libras</span>
+          <div id="container-video" class="container-video"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 3: MINI-JOGO DE FIXAÇÃO -->
+    <section id="tela-jogo" class="tela">
+      <div class="barra-topo">
+        <button class="btn-voltar" onclick="voltarAprender()">⬅ Voltar a Aprender</button>
+        <div class="placar">Estrelas: <span id="estrelas">0</span> ⭐</div>
+      </div>
+
+      <div class="area-quiz">
+        <h3>Qual é o significado deste sinal em Libras?</h3>
+        <div id="quiz-video-box" class="container-video quiz-video"></div>
+        <div id="quiz-opcoes" class="grade-opcoes"></div>
+        <p id="quiz-feedback" class="feedback"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
