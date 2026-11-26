@@ -1,11 +1,3 @@
-// Carrega automaticamente a API do YouTube caso não esteja no index.html
-if (!window.YT && !document.getElementById("youtube-iframe-api")) {
-  const tag = document.createElement("script");
-  tag.id = "youtube-iframe-api";
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(tag);
-}
-
 const dadosCategorias = {
   cores: {
     titulo: "CORES",
@@ -41,12 +33,15 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Pai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
-      { nome: "Mãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
+      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
+      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
       { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tio(a)", arquivo: "tio", emoji: "🧑", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Primo(a)", arquivo: "primo", emoji: "🧒", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avô(ó)", arquivo: "avo", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
+      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
     ]
   }
 };
@@ -75,7 +70,6 @@ function voltarAprender() {
 }
 
 function limparVideos() {
-  clearInterval(monitorTempoYt);
   document.getElementById("container-video").innerHTML = "";
   document.getElementById("quiz-video-box").innerHTML = "";
 }
@@ -125,74 +119,43 @@ function selecionarItem(index) {
   renderizarVideoLibras("container-video", item);
 }
 
-let ytPlayerAtual = null;
-let monitorTempoYt = null;
-
+// --- PLAYER DE VÍDEO EM LIBRAS ---
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
-  clearInterval(monitorTempoYt);
 
-  // Deixa o frame vertical APENAS para a categoria Cores
   if (categoriaAtual === "cores") {
     container.classList.add("vertical");
   } else {
     container.classList.remove("vertical");
   }
 
-  if (item.youtubeId) {
-    const playerDivId = `${containerId}-yt-player`;
-    container.style.flexDirection = "column";
-    container.innerHTML = `
-      <div style="width: 100%; flex: 1; position: relative; overflow: hidden; pointer-events: none;">
-        <div id="${playerDivId}" style="width: 100%; height: 100%;"></div>
-      </div>
-      <button type="button" onclick="tocarTrechoPreciso(${item.inicio}, ${item.fim})" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
-        🔄 Repetir Sinal
-      </button>`;
-
-    const criarPlayer = () => {
-      ytPlayerAtual = new YT.Player(playerDivId, {
-        videoId: item.youtubeId,
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-          controls: 0,
-          disablekb: 1,
-          playsinline: 1
-        },
-        events: {
-          onReady: () => tocarTrechoPreciso(item.inicio, item.fim)
-        }
-      });
-    };
-
-    if (window.YT && window.YT.Player) {
-      criarPlayer();
-    } else {
-      window.onYouTubeIframeAPIReady = criarPlayer;
-    }
-  } else {
+  if (!item.youtubeId) {
     container.innerHTML = `<p>🤟 Vídeo do sinal <strong>"${item.nome}"</strong> em breve!</p>`;
+    return;
   }
-}
 
-function tocarTrechoPreciso(inicio, fim) {
-  if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
+  const inicio = Math.floor(item.inicio || 0);
+  const fimParam = item.fim > 0 ? `&end=${Math.ceil(item.fim)}` : "";
+  const urlVideo = `https://www.youtube-nocookie.com/embed/${item.youtubeId}?start=${inicio}${fimParam}&autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`;
 
-  clearInterval(monitorTempoYt);
-  ytPlayerAtual.seekTo(inicio || 0, true);
-  ytPlayerAtual.playVideo();
+  const acaoRepetir = containerId === "quiz-video-box"
+    ? `renderizarVideoLibras('quiz-video-box', respostaCorretaAtual)`
+    : `renderizarVideoLibras('container-video', dadosCategorias['${categoriaAtual}'].itens[${indiceItemAtual}])`;
 
-  if (fim > 0) {
-    monitorTempoYt = setInterval(() => {
-      if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
-        if (ytPlayerAtual.getCurrentTime() >= fim) {
-          ytPlayerAtual.pauseVideo();
-          clearInterval(monitorTempoYt);
-        }
-      }
-    }, 50);
-  }
+  container.style.flexDirection = "column";
+  container.innerHTML = `
+    <iframe
+      width="100%"
+      height="100%"
+      src="${urlVideo}"
+      title="Sinal de ${item.nome}"
+      frameborder="0"
+      allow="autoplay; encrypted-media"
+      style="flex: 1; border: none;">
+    </iframe>
+    <button type="button" onclick="${acaoRepetir}" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
+      🔄 Repetir Sinal
+    </button>`;
 }
 
 // --- MINI-JOGO (QUIZ) ---
