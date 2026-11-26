@@ -33,8 +33,8 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Mamãe", arquivo: "mamae", emoji: "👩", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Papai", arquivo: "papai", emoji: "👨", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Mamãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
+      { nome: "Papai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
       { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "", inicio: 0, fim: 0 }
     ]
   }
@@ -64,6 +64,7 @@ function voltarAprender() {
 }
 
 function limparVideos() {
+  clearInterval(monitorTempoYt);
   document.getElementById("container-video").innerHTML = "";
   document.getElementById("quiz-video-box").innerHTML = "";
 }
@@ -113,38 +114,73 @@ function selecionarItem(index) {
   renderizarVideoLibras("container-video", item);
 }
 
+let ytPlayerAtual = null;
+let monitorTempoYt = null;
+
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
+  clearInterval(monitorTempoYt);
+
+  // Deixa o frame vertical APENAS para a categoria Cores
+  if (categoriaAtual === "cores") {
+    container.classList.add("vertical");
+  } else {
+    container.classList.remove("vertical");
+  }
 
   if (item.youtubeId) {
-    let url = `https://www.youtube.com/embed/${item.youtubeId}?rel=0&modestbranding=1`;
-    if (item.inicio > 0) url += `&start=${item.inicio}`;
-    if (item.fim > 0) url += `&end=${item.fim}`;
-
+    const playerDivId = `${containerId}-yt-player`;
+    container.style.flexDirection = "column";
     container.innerHTML = `
-      <iframe 
-        width="100%" 
-        height="100%" 
-        src="${url}" 
-        title="Sinal de ${item.nome} em Libras" 
-        frameborder="0" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen 
-        style="border-radius: 14px;">
-      </iframe>`;
+      <div style="width: 100%; flex: 1; position: relative; overflow: hidden; pointer-events: none;">
+        <div id="${playerDivId}" style="width: 100%; height: 100%;"></div>
+      </div>
+      <button type="button" onclick="tocarTrechoPreciso(${item.inicio}, ${item.fim})" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
+        🔄 Repetir Sinal
+      </button>`;
+
+    const criarPlayer = () => {
+      ytPlayerAtual = new YT.Player(playerDivId, {
+        videoId: item.youtubeId,
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          controls: 0,
+          disablekb: 1,
+          playsinline: 1
+        },
+        events: {
+          onReady: () => tocarTrechoPreciso(item.inicio, item.fim)
+        }
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      criarPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = criarPlayer;
+    }
   } else {
     container.innerHTML = `<p>🤟 Vídeo do sinal <strong>"${item.nome}"</strong> em breve!</p>`;
   }
 }
 
-function falarPalavraAtual() {
-  const item = dadosCategorias[categoriaAtual].itens[indiceItemAtual];
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-    const fala = new SpeechSynthesisUtterance(item.nome);
-    fala.lang = "pt-BR";
-    fala.rate = 0.9;
-    window.speechSynthesis.speak(fala);
+function tocarTrechoPreciso(inicio, fim) {
+  if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
+
+  clearInterval(monitorTempoYt);
+  ytPlayerAtual.seekTo(inicio || 0, true);
+  ytPlayerAtual.playVideo();
+
+  if (fim > 0) {
+    monitorTempoYt = setInterval(() => {
+      if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
+        if (ytPlayerAtual.getCurrentTime() >= fim) {
+          ytPlayerAtual.pauseVideo();
+          clearInterval(monitorTempoYt);
+        }
+      }
+    }, 50);
   }
 }
 
