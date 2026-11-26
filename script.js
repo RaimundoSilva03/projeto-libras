@@ -210,24 +210,38 @@ function renderizarVideoLibras(containerId, item) {
   }
 }
 
+let timeoutSeguranca = null;
+
 function tocarTrechoPreciso(inicio, fim) {
   inicioAtualMonitor = inicio || 0;
   fimAtualMonitor = fim || 0;
-
   if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
 
-  // Limpa qualquer cronómetro anterior para não pausar antes da hora
   clearInterval(monitorTempoYt);
-  
+  clearTimeout(timeoutSeguranca);
+
   ytPlayerAtual.seekTo(inicioAtualMonitor, true);
   ytPlayerAtual.playVideo();
 
-  // Dá 300ms para o YouTube concluir o salto antes de começar a vigiar o fim
-  setTimeout(() => {
-    iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
-  }, 300);
-}
+  if (fimAtualMonitor > 0) {
+    // 1. Pausa quando atingir o segundo exato (sem teto falso)
+    monitorTempoYt = setInterval(() => {
+      if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
+        const atual = ytPlayerAtual.getCurrentTime();
+        if (atual >= fimAtualMonitor && atual - inicioAtualMonitor < 5) {
+          ytPlayerAtual.pauseVideo();
+          clearInterval(monitorTempoYt);
+        }
+      }
+    }, 30);
 
+    // 2. Trava de emergência: pausa obrigatoriamente ao fim da duração do sinal
+    timeoutSeguranca = setTimeout(() => {
+      ytPlayerAtual.pauseVideo();
+      clearInterval(monitorTempoYt);
+    }, (fimAtualMonitor - inicioAtualMonitor + 0.6) * 1000);
+  }
+}
 function iniciarMonitorParada(inicio, fim) {
   clearInterval(monitorTempoYt);
   const limite = fim || fimAtualMonitor;
