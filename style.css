@@ -326,3 +326,12 @@
       grid-template-columns: 1fr;
     }
   }
+
+/* Frame vertical exclusivo para vídeos Shorts (categoria Cores) */
+#container-video.vertical,
+#quiz-video-box.vertical {
+  width: 240px;
+  height: 420px;
+  max-width: 100%;
+  margin: 0 auto;
+}
