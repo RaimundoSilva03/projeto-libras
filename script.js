@@ -1,3 +1,11 @@
+// Carrega automaticamente a API do YouTube caso não esteja no index.html
+if (!window.YT && !document.getElementById("youtube-iframe-api")) {
+  const tag = document.createElement("script");
+  tag.id = "youtube-iframe-api";
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+}
+
 const dadosCategorias = {
   cores: {
     titulo: "CORES",
@@ -33,9 +41,12 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Mamãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
-      { nome: "Papai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
-      { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "", inicio: 0, fim: 0 }
+      { nome: "Pai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
+      { nome: "Mãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
+      { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tio(a)", arquivo: "tio", emoji: "🧑", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Primo(a)", arquivo: "primo", emoji: "🧒", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Avô(ó)", arquivo: "avo", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
     ]
   }
 };
