@@ -41,15 +41,15 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
-      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
-      { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
+      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "", inicio: 0, fim: 0 }
     ]
   }
 };
@@ -63,9 +63,6 @@ let bloqueadoQuiz = false;
 let ytPlayerAtual = null;
 let videoIdCarregado = "";
 let monitorTempoYt = null;
-let timeoutSeguranca = null;
-let inicioAtualMonitor = 0;
-let fimAtualMonitor = 0;
 
 // --- NAVEGAÇÃO ENTRE TELAS ---
 function mostrarTela(idTela) {
@@ -86,7 +83,6 @@ function voltarAprender() {
 
 function limparVideos() {
   clearInterval(monitorTempoYt);
-  clearTimeout(timeoutSeguranca);
   ytPlayerAtual = null;
   videoIdCarregado = "";
   document.getElementById("container-video").innerHTML = "";
@@ -139,11 +135,10 @@ function selecionarItem(index) {
   renderizarVideoLibras("container-video", item);
 }
 
-// --- PLAYER OFICIAL REUTILIZÁVEL ---
+// --- PLAYER HÍBRIDO (LOCAL .MP4 + YOUTUBE) ---
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
   clearInterval(monitorTempoYt);
-  clearTimeout(timeoutSeguranca);
 
   if (categoriaAtual === "cores") {
     container.classList.add("vertical");
@@ -151,13 +146,36 @@ function renderizarVideoLibras(containerId, item) {
     container.classList.remove("vertical");
   }
 
+  // MODO 1: VÍDEO LOCAL (.mp4) QUANDO NÃO HOUVER youtubeId (Ex: Família)
   if (!item.youtubeId) {
     ytPlayerAtual = null;
     videoIdCarregado = "";
-    container.innerHTML = `<p>🤟 Vídeo do sinal <strong>"${item.nome}"</strong> em breve!</p>`;
+
+    if (categoriaAtual === "familia") {
+      const caminhoVideo = `midia/${categoriaAtual}/${item.arquivo}.mp4`;
+      container.style.flexDirection = "column";
+      container.innerHTML = `
+        <div style="width: 100%; flex: 1; position: relative; overflow: hidden; background: #000;">
+          <video id="${containerId}-local-video" src="${caminhoVideo}" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;">
+            Vídeo não encontrado.
+          </video>
+        </div>
+        <button type="button" id="${containerId}-btn-repetir" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
+          🔄 Repetir Sinal
+        </button>`;
+
+      const videoEl = document.getElementById(`${containerId}-local-video`);
+      document.getElementById(`${containerId}-btn-repetir`).onclick = () => {
+        videoEl.currentTime = 0;
+        videoEl.play();
+      };
+    } else {
+      container.innerHTML = `<p>🤟 Vídeo do sinal <strong>"${item.nome}"</strong> em breve!</p>`;
+    }
     return;
   }
 
+  // MODO 2: YOUTUBE (Ex: Cores - Sem engasgo na primeira abertura)
   const playerDivId = `${containerId}-yt-player`;
 
   if (ytPlayerAtual && videoIdCarregado === item.youtubeId && document.getElementById(playerDivId)) {
@@ -189,20 +207,17 @@ function renderizarVideoLibras(containerId, item) {
       playerVars: {
         start: Math.floor(item.inicio || 0),
         autoplay: 1,
+        mute: 1,
         rel: 0,
         modestbranding: 1,
         controls: 0,
-        playsinline: 1,
-        loop: 0
+        playsinline: 1
       },
       events: {
-        onReady: () => tocarTrechoPreciso(item.inicio, item.fim),
-        onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PLAYING) {
-            ativarContagemParada();
-          } else if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.PAUSED) {
-            clearTimeout(timeoutSeguranca);
-          }
+        onReady: (event) => {
+          event.target.mute();
+          event.target.playVideo();
+          vigiarFimDoTrecho(item.inicio, item.fim);
         }
       }
     });
@@ -215,46 +230,38 @@ function renderizarVideoLibras(containerId, item) {
   }
 }
 
-function tocarTrechoPreciso(inicio, fim) {
-  inicioAtualMonitor = inicio || 0;
-  fimAtualMonitor = fim || 0;
-  if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
-
+function vigiarFimDoTrecho(inicio, fim) {
   clearInterval(monitorTempoYt);
-  clearTimeout(timeoutSeguranca);
-
-  ytPlayerAtual.seekTo(inicioAtualMonitor, true);
-  ytPlayerAtual.playVideo();
-
-  if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
-    ativarContagemParada();
-  }
-}
-
-function ativarContagemParada() {
-  clearInterval(monitorTempoYt);
-  clearTimeout(timeoutSeguranca);
-
-  if (fimAtualMonitor <= 0) return;
+  let comecouATocar = false;
 
   monitorTempoYt = setInterval(() => {
-    if (ytPlayerAtual && ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
-      const atual = ytPlayerAtual.getCurrentTime();
-      if (atual >= fimAtualMonitor && atual - inicioAtualMonitor < 5) {
-        ytPlayerAtual.pauseVideo();
-        clearInterval(monitorTempoYt);
-        clearTimeout(timeoutSeguranca);
-      }
+    if (!ytPlayerAtual || typeof ytPlayerAtual.getPlayerState !== "function") {
+      clearInterval(monitorTempoYt);
+      return;
     }
-  }, 30);
 
-  const restanteMs = Math.max((fimAtualMonitor - inicioAtualMonitor + 0.4) * 1000, 800);
-  timeoutSeguranca = setTimeout(() => {
-    if (ytPlayerAtual && typeof ytPlayerAtual.pauseVideo === "function") {
-      ytPlayerAtual.pauseVideo();
+    const estado = ytPlayerAtual.getPlayerState();
+    const tempoAtual = ytPlayerAtual.getCurrentTime();
+
+    if (estado === YT.PlayerState.PLAYING && tempoAtual >= inicio - 0.3) {
+      comecouATocar = true;
     }
-    clearInterval(monitorTempoYt);
-  }, restanteMs);
+
+    if (comecouATocar && tempoAtual >= fim) {
+      ytPlayerAtual.pauseVideo();
+      clearInterval(monitorTempoYt);
+    }
+  }, 150);
+}
+
+function tocarTrechoPreciso(inicio, fim) {
+  clearInterval(monitorTempoYt);
+  if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
+
+  ytPlayerAtual.mute();
+  ytPlayerAtual.seekTo(inicio, true);
+  ytPlayerAtual.playVideo();
+  vigiarFimDoTrecho(inicio, fim);
 }
 
 // --- MINI-JOGO (QUIZ) ---
