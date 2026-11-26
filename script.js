@@ -41,15 +41,15 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
-      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
+      { nome: "Pai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
+      { nome: "Mãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
       { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tio", arquivo: "titio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tia", arquivo: "titia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
       { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
       { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
+      { nome: "Avô", arquivo: "vovo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Avó", arquivo: "vovo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
     ]
   }
 };
