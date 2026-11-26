@@ -1,3 +1,11 @@
+// Carrega a API oficial do YouTube uma única vez
+if (!window.YT && !document.getElementById("youtube-iframe-api")) {
+  const tag = document.createElement("script");
+  tag.id = "youtube-iframe-api";
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+}
+
 const dadosCategorias = {
   cores: {
     titulo: "CORES",
@@ -52,6 +60,10 @@ let estrelas = 0;
 let respostaCorretaAtual = null;
 let bloqueadoQuiz = false;
 
+let ytPlayerAtual = null;
+let videoIdCarregado = "";
+let monitorTempoYt = null;
+
 // --- NAVEGAÇÃO ENTRE TELAS ---
 function mostrarTela(idTela) {
   document.querySelectorAll(".tela").forEach(tela => tela.classList.remove("ativa"));
@@ -70,12 +82,16 @@ function voltarAprender() {
 }
 
 function limparVideos() {
+  clearInterval(monitorTempoYt);
+  ytPlayerAtual = null;
+  videoIdCarregado = "";
   document.getElementById("container-video").innerHTML = "";
   document.getElementById("quiz-video-box").innerHTML = "";
 }
 
 // --- MODO APRENDER ---
 function abrirCategoria(categoria) {
+  limparVideos();
   categoriaAtual = categoria;
   indiceItemAtual = 0;
 
@@ -119,9 +135,10 @@ function selecionarItem(index) {
   renderizarVideoLibras("container-video", item);
 }
 
-// --- PLAYER DE VÍDEO EM LIBRAS ---
+// --- PLAYER OFICIAL REUTILIZÁVEL (NÃO RECARREGA ANÚNCIO AO REPETIR) ---
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
+  clearInterval(monitorTempoYt);
 
   if (categoriaAtual === "cores") {
     container.classList.add("vertical");
@@ -130,32 +147,81 @@ function renderizarVideoLibras(containerId, item) {
   }
 
   if (!item.youtubeId) {
+    ytPlayerAtual = null;
+    videoIdCarregado = "";
     container.innerHTML = `<p>🤟 Vídeo do sinal <strong>"${item.nome}"</strong> em breve!</p>`;
     return;
   }
 
-  const inicio = Math.floor(item.inicio || 0);
-  const fimParam = item.fim > 0 ? `&end=${Math.ceil(item.fim)}` : "";
-  const urlVideo = `https://www.youtube-nocookie.com/embed/${item.youtubeId}?start=${inicio}${fimParam}&autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`;
+  const playerDivId = `${containerId}-yt-player`;
 
-  const acaoRepetir = containerId === "quiz-video-box"
-    ? `renderizarVideoLibras('quiz-video-box', respostaCorretaAtual)`
-    : `renderizarVideoLibras('container-video', dadosCategorias['${categoriaAtual}'].itens[${indiceItemAtual}])`;
+  // Se o mesmo vídeo já está carregado na tela, apenas pula para o segundo exato sem recarregar!
+  if (ytPlayerAtual && videoIdCarregado === item.youtubeId && document.getElementById(playerDivId)) {
+    const btnRepetir = document.getElementById(`${containerId}-btn-repetir`);
+    if (btnRepetir) {
+      btnRepetir.onclick = () => tocarTrechoPreciso(item.inicio, item.fim);
+    }
+    tocarTrechoPreciso(item.inicio, item.fim);
+    return;
+  }
 
+  videoIdCarregado = item.youtubeId;
   container.style.flexDirection = "column";
   container.innerHTML = `
-    <iframe
-      width="100%"
-      height="100%"
-      src="${urlVideo}"
-      title="Sinal de ${item.nome}"
-      frameborder="0"
-      allow="autoplay; encrypted-media"
-      style="flex: 1; border: none;">
-    </iframe>
-    <button type="button" onclick="${acaoRepetir}" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
+    <div style="width: 100%; flex: 1; position: relative; overflow: hidden;">
+      <div id="${playerDivId}" style="width: 100%; height: 100%;"></div>
+    </div>
+    <button type="button" id="${containerId}-btn-repetir" style="width:100%; padding:10px; background:#6d28d9; color:white; border:none; font-weight:bold; cursor:pointer; font-size:1rem;">
       🔄 Repetir Sinal
     </button>`;
+
+  document.getElementById(`${containerId}-btn-repetir`).onclick = () => {
+    tocarTrechoPreciso(item.inicio, item.fim);
+  };
+
+  const criarPlayer = () => {
+    ytPlayerAtual = new YT.Player(playerDivId, {
+      videoId: item.youtubeId,
+      host: "https://www.youtube-nocookie.com",
+      playerVars: {
+        start: Math.floor(item.inicio || 0),
+        autoplay: 1,
+        rel: 0,
+        modestbranding: 1,
+        controls: 0,
+        playsinline: 1
+      },
+      events: {
+        onReady: () => tocarTrechoPreciso(item.inicio, item.fim)
+      }
+    });
+  };
+
+  if (window.YT && window.YT.Player) {
+    criarPlayer();
+  } else {
+    window.onYouTubeIframeAPIReady = criarPlayer;
+  }
+}
+
+function tocarTrechoPreciso(inicio, fim) {
+  if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
+
+  clearInterval(monitorTempoYt);
+  ytPlayerAtual.seekTo(inicio || 0, true);
+  ytPlayerAtual.playVideo();
+
+  if (fim > 0) {
+    monitorTempoYt = setInterval(() => {
+      if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
+        const atual = ytPlayerAtual.getCurrentTime();
+        if (atual >= fim && atual >= inicio) {
+          ytPlayerAtual.pauseVideo();
+          clearInterval(monitorTempoYt);
+        }
+      }
+    }, 50);
+  }
 }
 
 // --- MINI-JOGO (QUIZ) ---
