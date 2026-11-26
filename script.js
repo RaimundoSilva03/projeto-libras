@@ -216,10 +216,16 @@ function tocarTrechoPreciso(inicio, fim) {
 
   if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
 
+  // Limpa qualquer cronómetro anterior para não pausar antes da hora
   clearInterval(monitorTempoYt);
+  
   ytPlayerAtual.seekTo(inicioAtualMonitor, true);
   ytPlayerAtual.playVideo();
-  iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
+
+  // Dá 300ms para o YouTube concluir o salto antes de começar a vigiar o fim
+  setTimeout(() => {
+    iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
+  }, 300);
 }
 
 function iniciarMonitorParada(inicio, fim) {
@@ -230,13 +236,17 @@ function iniciarMonitorParada(inicio, fim) {
   if (limite > 0) {
     monitorTempoYt = setInterval(() => {
       if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
-        const atual = ytPlayerAtual.getCurrentTime();
-        if (atual >= limite && atual >= comeco) {
-          ytPlayerAtual.pauseVideo();
-          clearInterval(monitorTempoYt);
+        // Só verifica a pausa se o vídeo estiver realmente a tocar (estado 1)
+        if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
+          const atual = ytPlayerAtual.getCurrentTime();
+          // Garante que já passou do início e atingiu o limite (com margem de segurança)
+          if (atual >= limite && atual >= comeco && atual < limite + 2) {
+            ytPlayerAtual.pauseVideo();
+            clearInterval(monitorTempoYt);
+          }
         }
       }
-    }, 30);
+    }, 50);
   }
 }
 
