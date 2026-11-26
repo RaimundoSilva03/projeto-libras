@@ -196,7 +196,9 @@ function renderizarVideoLibras(containerId, item) {
         onReady: () => tocarTrechoPreciso(item.inicio, item.fim),
         onStateChange: (event) => {
           if (event.data === YT.PlayerState.PLAYING) {
-            iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
+            ativarContagemParada();
+          } else if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.PAUSED) {
+            clearTimeout(timeoutSeguranca);
           }
         }
       }
@@ -223,17 +225,39 @@ function tocarTrechoPreciso(inicio, fim) {
   ytPlayerAtual.seekTo(inicioAtualMonitor, true);
   ytPlayerAtual.playVideo();
 
-  if (fimAtualMonitor > 0) {
-    // 1. Pausa quando atingir o segundo exato (sem teto falso)
-    monitorTempoYt = setInterval(() => {
-      if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
-        const atual = ytPlayerAtual.getCurrentTime();
-        if (atual >= fimAtualMonitor && atual - inicioAtualMonitor < 5) {
-          ytPlayerAtual.pauseVideo();
-          clearInterval(monitorTempoYt);
-        }
+  // Caso o vídeo já estivesse rodando sem precisar carregar buffer, já ativa a contagem
+  if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
+    ativarContagemParada();
+  }
+}
+
+function ativarContagemParada() {
+  clearInterval(monitorTempoYt);
+  clearTimeout(timeoutSeguranca);
+
+  if (fimAtualMonitor <= 0) return;
+
+  // 1. Pausa quando o relógio do vídeo atinge o segundo final
+  monitorTempoYt = setInterval(() => {
+    if (ytPlayerAtual && ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
+      const atual = ytPlayerAtual.getCurrentTime();
+      if (atual >= fimAtualMonitor && atual - inicioAtualMonitor < 5) {
+        ytPlayerAtual.pauseVideo();
+        clearInterval(monitorTempoYt);
+        clearTimeout(timeoutSeguranca);
       }
-    }, 30);
+    }
+  }, 30);
+
+  // 2. Só inicia o cronômetro de emergência com o vídeo realmente em reprodução (sem descontar tempo de buffer)
+  const restanteMs = Math.max((fimAtualMonitor - inicioAtualMonitor + 0.4) * 1000, 800);
+  timeoutSeguranca = setTimeout(() => {
+    if (ytPlayerAtual && typeof ytPlayerAtual.pauseVideo === "function") {
+      ytPlayerAtual.pauseVideo();
+    }
+    clearInterval(monitorTempoYt);
+  }, restanteMs);
+}
 
     // 2. Trava de emergência: pausa obrigatoriamente ao fim da duração do sinal
     timeoutSeguranca = setTimeout(() => {
