@@ -63,6 +63,8 @@ let bloqueadoQuiz = false;
 let ytPlayerAtual = null;
 let videoIdCarregado = "";
 let monitorTempoYt = null;
+let inicioAtualMonitor = 0;
+let fimAtualMonitor = 0;
 
 // --- NAVEGAÇÃO ENTRE TELAS ---
 function mostrarTela(idTela) {
@@ -135,7 +137,7 @@ function selecionarItem(index) {
   renderizarVideoLibras("container-video", item);
 }
 
-// --- PLAYER OFICIAL REUTILIZÁVEL (NÃO RECARREGA ANÚNCIO AO REPETIR) ---
+// --- PLAYER OFICIAL REUTILIZÁVEL ---
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
   clearInterval(monitorTempoYt);
@@ -155,7 +157,6 @@ function renderizarVideoLibras(containerId, item) {
 
   const playerDivId = `${containerId}-yt-player`;
 
-  // Se o mesmo vídeo já está carregado na tela, apenas pula para o segundo exato sem recarregar!
   if (ytPlayerAtual && videoIdCarregado === item.youtubeId && document.getElementById(playerDivId)) {
     const btnRepetir = document.getElementById(`${containerId}-btn-repetir`);
     if (btnRepetir) {
@@ -182,17 +183,22 @@ function renderizarVideoLibras(containerId, item) {
   const criarPlayer = () => {
     ytPlayerAtual = new YT.Player(playerDivId, {
       videoId: item.youtubeId,
-      host: "https://www.youtube-nocookie.com",
       playerVars: {
         start: Math.floor(item.inicio || 0),
         autoplay: 1,
         rel: 0,
         modestbranding: 1,
         controls: 0,
-        playsinline: 1
+        playsinline: 1,
+        loop: 0
       },
       events: {
-        onReady: () => tocarTrechoPreciso(item.inicio, item.fim)
+        onReady: () => tocarTrechoPreciso(item.inicio, item.fim),
+        onStateChange: (event) => {
+          if (event.data === YT.PlayerState.PLAYING) {
+            iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
+          }
+        }
       }
     });
   };
@@ -205,22 +211,32 @@ function renderizarVideoLibras(containerId, item) {
 }
 
 function tocarTrechoPreciso(inicio, fim) {
+  inicioAtualMonitor = inicio || 0;
+  fimAtualMonitor = fim || 0;
+
   if (!ytPlayerAtual || typeof ytPlayerAtual.seekTo !== "function") return;
 
   clearInterval(monitorTempoYt);
-  ytPlayerAtual.seekTo(inicio || 0, true);
+  ytPlayerAtual.seekTo(inicioAtualMonitor, true);
   ytPlayerAtual.playVideo();
+  iniciarMonitorParada(inicioAtualMonitor, fimAtualMonitor);
+}
 
-  if (fim > 0) {
+function iniciarMonitorParada(inicio, fim) {
+  clearInterval(monitorTempoYt);
+  const limite = fim || fimAtualMonitor;
+  const comeco = inicio || inicioAtualMonitor;
+
+  if (limite > 0) {
     monitorTempoYt = setInterval(() => {
       if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
         const atual = ytPlayerAtual.getCurrentTime();
-        if (atual >= fim && atual >= inicio) {
+        if (atual >= limite && atual >= comeco) {
           ytPlayerAtual.pauseVideo();
           clearInterval(monitorTempoYt);
         }
       }
-    }, 50);
+    }, 30);
   }
 }
 
