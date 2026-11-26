@@ -28,6 +28,8 @@ const dadosCategorias = {
       { nome: "Cachorro", arquivo: "cachorro", emoji: "🐶", youtubeId: "", inicio: 0, fim: 0 },
       { nome: "Gato", arquivo: "gato", emoji: "🐱", youtubeId: "", inicio: 0, fim: 0 },
       { nome: "Leão", arquivo: "leao", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
+      { nome: "Coelho", arquivo: "coelho", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
+      { nome: "Peixe", arquivo: "peixe", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
     ]
   },
   frutas: {
