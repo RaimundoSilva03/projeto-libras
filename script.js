@@ -10,16 +10,16 @@ const dadosCategorias = {
   cores: {
     titulo: "CORES",
     itens: [
-      { nome: "Azul", corHex: "#2563eb", youtubeId: "f8z8XK7HPbQ", inicio: 10, fim: 12.3 },
-      { nome: "Amarelo", corHex: "#facc15", youtubeId: "f8z8XK7HPbQ", inicio: 7, fim: 8.9 },
+      { nome: "Azul", corHex: "#2563eb", youtubeId: "f8z8XK7HPbQ", inicio: 10, fim: 12.1 },
+      { nome: "Amarelo", corHex: "#facc15", youtubeId: "f8z8XK7HPbQ", inicio: 7, fim: 8.7 },
       { nome: "Vermelho", corHex: "#ef4444", youtubeId: "f8z8XK7HPbQ", inicio: 15, fim: 18.5 },
-      { nome: "Verde", corHex: "#22c55e", youtubeId: "f8z8XK7HPbQ", inicio: 25, fim: 27.9 },
-      { nome: "Laranja", corHex: "#f97316", youtubeId: "f8z8XK7HPbQ", inicio: 30, fim: 32.9 },
-      { nome: "Roxo", corHex: "#9333ea", youtubeId: "f8z8XK7HPbQ", inicio: 34, fim: 37.9 },
-      { nome: "Rosa", corHex: "#ec4899", youtubeId: "f8z8XK7HPbQ", inicio: 44, fim: 46.7 },
+      { nome: "Verde", corHex: "#22c55e", youtubeId: "f8z8XK7HPbQ", inicio: 25, fim: 27.6 },
+      { nome: "Laranja", corHex: "#f97316", youtubeId: "f8z8XK7HPbQ", inicio: 30, fim: 32.6 },
+      { nome: "Roxo", corHex: "#9333ea", youtubeId: "f8z8XK7HPbQ", inicio: 34, fim: 37.6 },
+      { nome: "Rosa", corHex: "#ec4899", youtubeId: "f8z8XK7HPbQ", inicio: 44, fim: 46.6 },
       { nome: "Preto", corHex: "#1e293b", youtubeId: "f8z8XK7HPbQ", inicio: 20, fim: 23 },
-      { nome: "Branco", corHex: "#ffffff", youtubeId: "f8z8XK7HPbQ", inicio: 49, fim: 51.5 },
-      { nome: "Marrom", corHex: "#78350f", youtubeId: "f8z8XK7HPbQ", inicio: 53, fim: 56.2 }
+      { nome: "Branco", corHex: "#ffffff", youtubeId: "f8z8XK7HPbQ", inicio: 49, fim: 51.3 },
+      { nome: "Marrom", corHex: "#78350f", youtubeId: "f8z8XK7HPbQ", inicio: 53, fim: 56.1 }
     ]
   },
   animais: {
@@ -41,15 +41,15 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Pai", arquivo: "papai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
-      { nome: "Mãe", arquivo: "mamae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
+      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 195, fim: 197.1 },
+      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 202.2, fim: 203.2 },
       { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tio", arquivo: "titio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Tia", arquivo: "titia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
       { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
       { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avô", arquivo: "vovo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
-      { nome: "Avó", arquivo: "vovo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
+      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 },
+      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "QCv2wkDBG58", inicio: 0, fim: 0 }
     ]
   }
 };
@@ -63,6 +63,7 @@ let bloqueadoQuiz = false;
 let ytPlayerAtual = null;
 let videoIdCarregado = "";
 let monitorTempoYt = null;
+let timeoutSeguranca = null;
 let inicioAtualMonitor = 0;
 let fimAtualMonitor = 0;
 
@@ -85,6 +86,7 @@ function voltarAprender() {
 
 function limparVideos() {
   clearInterval(monitorTempoYt);
+  clearTimeout(timeoutSeguranca);
   ytPlayerAtual = null;
   videoIdCarregado = "";
   document.getElementById("container-video").innerHTML = "";
@@ -141,6 +143,7 @@ function selecionarItem(index) {
 function renderizarVideoLibras(containerId, item) {
   const container = document.getElementById(containerId);
   clearInterval(monitorTempoYt);
+  clearTimeout(timeoutSeguranca);
 
   if (categoriaAtual === "cores") {
     container.classList.add("vertical");
@@ -212,8 +215,6 @@ function renderizarVideoLibras(containerId, item) {
   }
 }
 
-let timeoutSeguranca = null;
-
 function tocarTrechoPreciso(inicio, fim) {
   inicioAtualMonitor = inicio || 0;
   fimAtualMonitor = fim || 0;
@@ -225,7 +226,6 @@ function tocarTrechoPreciso(inicio, fim) {
   ytPlayerAtual.seekTo(inicioAtualMonitor, true);
   ytPlayerAtual.playVideo();
 
-  // Caso o vídeo já estivesse rodando sem precisar carregar buffer, já ativa a contagem
   if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
     ativarContagemParada();
   }
@@ -237,7 +237,6 @@ function ativarContagemParada() {
 
   if (fimAtualMonitor <= 0) return;
 
-  // 1. Pausa quando o relógio do vídeo atinge o segundo final
   monitorTempoYt = setInterval(() => {
     if (ytPlayerAtual && ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
       const atual = ytPlayerAtual.getCurrentTime();
@@ -249,7 +248,6 @@ function ativarContagemParada() {
     }
   }, 30);
 
-  // 2. Só inicia o cronômetro de emergência com o vídeo realmente em reprodução (sem descontar tempo de buffer)
   const restanteMs = Math.max((fimAtualMonitor - inicioAtualMonitor + 0.4) * 1000, 800);
   timeoutSeguranca = setTimeout(() => {
     if (ytPlayerAtual && typeof ytPlayerAtual.pauseVideo === "function") {
@@ -257,35 +255,6 @@ function ativarContagemParada() {
     }
     clearInterval(monitorTempoYt);
   }, restanteMs);
-}
-
-    // 2. Trava de emergência: pausa obrigatoriamente ao fim da duração do sinal
-    timeoutSeguranca = setTimeout(() => {
-      ytPlayerAtual.pauseVideo();
-      clearInterval(monitorTempoYt);
-    }, (fimAtualMonitor - inicioAtualMonitor + 0.6) * 1000);
-  }
-}
-function iniciarMonitorParada(inicio, fim) {
-  clearInterval(monitorTempoYt);
-  const limite = fim || fimAtualMonitor;
-  const comeco = inicio || inicioAtualMonitor;
-
-  if (limite > 0) {
-    monitorTempoYt = setInterval(() => {
-      if (ytPlayerAtual && typeof ytPlayerAtual.getCurrentTime === "function") {
-        // Só verifica a pausa se o vídeo estiver realmente a tocar (estado 1)
-        if (ytPlayerAtual.getPlayerState() === YT.PlayerState.PLAYING) {
-          const atual = ytPlayerAtual.getCurrentTime();
-          // Garante que já passou do início e atingiu o limite (com margem de segurança)
-          if (atual >= limite && atual >= comeco && atual < limite + 2) {
-            ytPlayerAtual.pauseVideo();
-            clearInterval(monitorTempoYt);
-          }
-        }
-      }
-    }, 50);
-  }
 }
 
 // --- MINI-JOGO (QUIZ) ---
