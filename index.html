@@ -74,10 +74,16 @@
       </div>
 
       <div class="area-quiz">
-        <h3>Qual é o significado deste sinal em Libras?</h3>
-        <div id="quiz-video-box" class="container-video quiz-video"></div>
-        <div id="quiz-opcoes" class="grade-opcoes"></div>
-        <p id="quiz-feedback" class="feedback"></p>
+        <div id="quiz-rodada">
+          <p id="quiz-progresso" class="progresso-quiz"></p>
+          <h3>Qual é o significado deste sinal em Libras?</h3>
+          <div id="quiz-video-box" class="container-video quiz-video"></div>
+          <div id="quiz-opcoes" class="grade-opcoes"></div>
+          <p id="quiz-feedback" class="feedback"></p>
+        </div>
+
+        <!-- Tela de parabéns / aviso de tema indisponível (preenchida via JS) -->
+        <div id="quiz-final" class="quiz-final" hidden></div>
       </div>
     </section>
   </main>

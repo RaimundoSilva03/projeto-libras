@@ -27,9 +27,9 @@ const dadosCategorias = {
     itens: [
       { nome: "Cachorro", arquivo: "cachorro", emoji: "🐶", youtubeId: "", inicio: 0, fim: 0 },
       { nome: "Gato", arquivo: "gato", emoji: "🐱", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Leão", arquivo: "leao", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
-      { nome: "Coelho", arquivo: "coelho", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
-      { nome: "Peixe", arquivo: "peixe", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 }
+      { nome: "Leão", arquivo: "leao", emoji: "🦁", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Coelho", arquivo: "coelho", emoji: "🐰", youtubeId: "", inicio: 0, fim: 0 },
+      { nome: "Peixe", arquivo: "peixe", emoji: "🐟", youtubeId: "", inicio: 0, fim: 0 }
     ]
   },
   frutas: {
@@ -62,6 +62,14 @@ let estrelas = 0;
 let respostaCorretaAtual = null;
 let bloqueadoQuiz = false;
 
+// Estado do quiz
+const RODADAS_POR_PARTIDA = 5;
+const OPCOES_POR_RODADA = 4;
+let filaQuiz = [];
+let rodadaAtual = 0;
+let errouNestaRodada = false;
+let timeoutProximaRodada = null;
+
 let ytPlayerAtual = null;
 let videoIdCarregado = "";
 let monitorTempoYt = null;
@@ -85,6 +93,7 @@ function voltarAprender() {
 
 function limparVideos() {
   clearInterval(monitorTempoYt);
+  clearTimeout(timeoutProximaRodada);
   ytPlayerAtual = null;
   videoIdCarregado = "";
   document.getElementById("container-video").innerHTML = "";
@@ -204,6 +213,7 @@ function renderizarVideoLibras(containerId, item) {
   };
 
   const criarPlayer = () => {
+    if (!document.getElementById(playerDivId)) return;
     ytPlayerAtual = new YT.Player(playerDivId, {
       videoId: item.youtubeId,
       playerVars: {
@@ -267,28 +277,86 @@ function tocarTrechoPreciso(inicio, fim) {
 }
 
 // --- MINI-JOGO (QUIZ) ---
+function embaralhar(lista) {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+// Só entram como "pergunta" os itens que realmente têm vídeo do sinal
+function itemTemVideo(item) {
+  return Boolean(item.youtubeId) || categoriaAtual === "familia";
+}
+
+function atualizarEstrelas() {
+  document.getElementById("estrelas").textContent = estrelas;
+}
+
+function mostrarRodadaQuiz() {
+  document.getElementById("quiz-rodada").hidden = false;
+  document.getElementById("quiz-final").hidden = true;
+}
+
+function mostrarMensagemQuiz(html) {
+  limparVideos();
+  document.getElementById("quiz-rodada").hidden = true;
+  const caixa = document.getElementById("quiz-final");
+  caixa.innerHTML = html;
+  caixa.hidden = false;
+}
+
 function iniciarJogo() {
   limparVideos();
+  estrelas = 0;
+  rodadaAtual = 0;
+  atualizarEstrelas();
   mostrarTela("tela-jogo");
+
+  const itens = dadosCategorias[categoriaAtual].itens;
+  const jogaveis = itens.filter(itemTemVideo);
+
+  if (jogaveis.length === 0 || itens.length < 2) {
+    mostrarMensagemQuiz(`
+      <div class="quiz-final-emoji">🚧</div>
+      <h3>Os sinais deste tema ainda estão chegando!</h3>
+      <p>Volte em breve para praticar.</p>
+      <div class="botoes-final">
+        <button class="btn-voltar" onclick="voltarAprender()">⬅ Voltar a Aprender</button>
+      </div>`);
+    return;
+  }
+
+  filaQuiz = embaralhar(jogaveis).slice(0, RODADAS_POR_PARTIDA);
+  mostrarRodadaQuiz();
   proximaRodadaQuiz();
 }
 
 function proximaRodadaQuiz() {
+  clearTimeout(timeoutProximaRodada);
+
+  if (rodadaAtual >= filaQuiz.length) {
+    mostrarFimDoQuiz();
+    return;
+  }
+
   bloqueadoQuiz = false;
+  errouNestaRodada = false;
   document.getElementById("quiz-feedback").textContent = "";
+  document.getElementById("quiz-progresso").textContent =
+    `Pergunta ${rodadaAtual + 1} de ${filaQuiz.length}`;
 
   const itens = dadosCategorias[categoriaAtual].itens;
-  const indiceCorreto = Math.floor(Math.random() * itens.length);
-  respostaCorretaAtual = itens[indiceCorreto];
+  respostaCorretaAtual = filaQuiz[rodadaAtual];
 
   renderizarVideoLibras("quiz-video-box", respostaCorretaAtual);
 
-  const embaralhados = [...itens].sort(() => Math.random() - 0.5);
-  const opcoes = embaralhados.slice(0, 3);
-  if (!opcoes.includes(respostaCorretaAtual)) {
-    opcoes[0] = respostaCorretaAtual;
-    opcoes.sort(() => Math.random() - 0.5);
-  }
+  // 1 correta + distratores da mesma categoria
+  const distratores = embaralhar(itens.filter(i => i !== respostaCorretaAtual))
+    .slice(0, OPCOES_POR_RODADA - 1);
+  const opcoes = embaralhar([respostaCorretaAtual, ...distratores]);
 
   const gradeOpcoes = document.getElementById("quiz-opcoes");
   gradeOpcoes.innerHTML = "";
@@ -317,17 +385,49 @@ function verificarResposta(opcaoEscolhida, botaoClicado) {
   if (opcaoEscolhida.nome === respostaCorretaAtual.nome) {
     bloqueadoQuiz = true;
     botaoClicado.classList.add("correta");
-    estrelas++;
-    document.getElementById("estrelas").textContent = estrelas;
     feedback.style.color = "#16a34a";
-    feedback.textContent = `🎉 Muito bem! Esse é o sinal de ${respostaCorretaAtual.nome}!`;
 
-    setTimeout(() => {
-      proximaRodadaQuiz();
-    }, 1800);
+    // Estrela só se acertou de primeira
+    if (!errouNestaRodada) {
+      estrelas++;
+      atualizarEstrelas();
+      feedback.textContent = `🎉 Muito bem! Esse é o sinal de ${respostaCorretaAtual.nome}!`;
+    } else {
+      feedback.textContent = `👏 Isso! Esse é o sinal de ${respostaCorretaAtual.nome}!`;
+    }
+
+    rodadaAtual++;
+    timeoutProximaRodada = setTimeout(proximaRodadaQuiz, 1800);
   } else {
+    errouNestaRodada = true;
     botaoClicado.classList.add("errada");
+    botaoClicado.disabled = true;
     feedback.style.color = "#dc2626";
-    feedback.textContent = "❌ Quase lá! Tente outra opção.";
+    feedback.textContent = "❌ Quase lá! Veja o sinal de novo e tente outra opção.";
+
+    // Reforço: repete o sinal automaticamente
+    const btnRepetir = document.getElementById("quiz-video-box-btn-repetir");
+    if (btnRepetir) btnRepetir.click();
   }
+}
+
+function mostrarFimDoQuiz() {
+  const total = filaQuiz.length;
+  const estrelasTexto = "⭐".repeat(estrelas) + "☆".repeat(total - estrelas);
+
+  let mensagem;
+  if (estrelas === total) mensagem = "Perfeito! Você acertou tudo de primeira! 🏆";
+  else if (estrelas >= total / 2) mensagem = "Muito bem! Você está aprendendo os sinais! 🎉";
+  else mensagem = "Bom começo! Vamos treinar mais um pouquinho? 💪";
+
+  mostrarMensagemQuiz(`
+    <div class="quiz-final-emoji">🎊</div>
+    <h3>Parabéns!</h3>
+    <p class="estrelas-final">${estrelasTexto}</p>
+    <p>Você acertou <strong>${estrelas}</strong> de <strong>${total}</strong> sinais de primeira.</p>
+    <p>${mensagem}</p>
+    <div class="botoes-final">
+      <button class="btn-jogar" onclick="iniciarJogo()">🔄 Jogar de novo</button>
+      <button class="btn-voltar" onclick="voltarAprender()">⬅ Voltar a Aprender</button>
+    </div>`);
 }

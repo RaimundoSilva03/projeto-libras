@@ -335,3 +335,51 @@
   max-width: 100%;
   margin: 0 auto;
 }
+
+/* ===== QUIZ: progresso, 4 opções e tela final ===== */
+[hidden] { display: none !important; }
+
+.progresso-quiz {
+  color: #6d28d9;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.grade-opcoes {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.opcao-quiz:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.quiz-final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0;
+  font-size: 1.2rem;
+}
+
+.quiz-final-emoji { font-size: 4.5rem; }
+.estrelas-final { font-size: 2.2rem; letter-spacing: 4px; }
+
+.botoes-final {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+@media (max-width: 700px) {
+  .grade-opcoes { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .opcao-quiz { padding: 14px 6px; font-size: 1.1rem; }
+}
