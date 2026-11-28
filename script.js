@@ -47,10 +47,10 @@ const dadosCategorias = {
       { nome: "Mamãe", arquivo: "mamae", emoji: "👩" },
       { nome: "Irmão", arquivo: "irmao", emoji: "👦" },
       { nome: "Irmã", arquivo: "irma", emoji: "👧" },
-      { nome: "Tio", arquivo: "titio", emoji: "👨" },
-      { nome: "Tia", arquivo: "titia", emoji: "👩" },
-      { nome: "Avô", arquivo: "vovo_m", emoji: "👴" },
-      { nome: "Avó", arquivo: "vovo_f", emoji: "👵" }
+      { nome: "Tio", arquivo: "tio", emoji: "👨" },
+      { nome: "Tia", arquivo: "tia", emoji: "👩" },
+      { nome: "Vovô", arquivo: "vovo_m", emoji: "👴" },
+      { nome: "Vovó", arquivo: "vovo_f", emoji: "👵" }
     ]
   },
 };
