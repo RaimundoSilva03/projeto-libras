@@ -43,17 +43,16 @@ const dadosCategorias = {
   familia: {
     titulo: "FAMÍLIA",
     itens: [
-      { nome: "Pai", arquivo: "pai", emoji: "👨", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Mãe", arquivo: "mae", emoji: "👩", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Bebê", arquivo: "bebe", emoji: "👶", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Tio", arquivo: "tio", emoji: "👨", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Tia", arquivo: "tia", emoji: "👩", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Primo", arquivo: "primo", emoji: "👦", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Prima", arquivo: "prima", emoji: "👧", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Avô", arquivo: "avo_m", emoji: "👴", youtubeId: "", inicio: 0, fim: 0 },
-      { nome: "Avó", arquivo: "avo_f", emoji: "👵", youtubeId: "", inicio: 0, fim: 0 }
+      { nome: "Papai", arquivo: "papai", emoji: "👨" },
+      { nome: "Mamãe", arquivo: "mamae", emoji: "👩" },
+      { nome: "Irmão", arquivo: "irmao", emoji: "👦" },
+      { nome: "Irmã", arquivo: "irma", emoji: "👧" },
+      { nome: "Titio", arquivo: "titio", emoji: "👨" },
+      { nome: "Titia", arquivo: "titia", emoji: "👩" },
+      { nome: "Vovô", arquivo: "vovo_m", emoji: "👴" },
+      { nome: "Vovó", arquivo: "vovo_f", emoji: "👵" }
     ]
-  }
+  },
 };
 
 let categoriaAtual = "cores";
